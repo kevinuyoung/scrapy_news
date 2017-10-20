@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import superAgent from 'superagent';
 import cheerio from 'cheerio';
+import request from 'request';
 
 const app = express();
 
@@ -54,13 +55,18 @@ const updateDate = (date) => {
 // }
 //https://segmentfault.com/t/javascript/blogs?page=1
 //https://segmentfault.com/news/frontend?page=1
+/**
+ * [description]
+ * scrapy news from segmentfault
+ */
 const dataFromSegmentfault = () => {
   // const url = "https://segmentfault.com/t/javascript/blogs?page=1";
   // 小于1天，用 小时
   // 小于7天，就 天，
   // 大于等于 7天， 用 月份/日期
   // 不在今年， 用 年/月/日
-  const url = "https://segmentfault.com/news/frontend?page=1"
+  // const url = "https://segmentfault.com/news/frontend?page=1";  // 最热头条
+  const url = "https://segmentfault.com/news/frontend/newest?page=1"; // 最新头条
   superAgent
     .get(url)
     .end((err, documents) => {
@@ -89,12 +95,18 @@ const dataFromSegmentfault = () => {
         const author = execRes[4];
         const createDate = updateDate(execRes[6]);
 
+        let counts = $item.find('.news__bookmark-text').text();
+        if (counts.indexOf('k') > 0) {
+          counts = parseFloat(counts) * 1000;
+        }
+        counts = parseInt(counts);
         const hotNumber = $item.find('.news__bookmark-text').text();
         data.push({
           title,
           author,
           url,
-          createDate
+          createDate,
+          counts
         })
       }
       console.log(data);
@@ -118,6 +130,77 @@ const dataFromSegmentfault = () => {
     })
 };
 
+const fetcnDataFromRequest = (url) => {
+  console.log(url);
+  request({
+    method: 'GET',
+    url: url,
+    json: 'Content-type: application/json'
+  }, (error, res, data) => {
+    console.log('-----------------------');
+    // const resData = JSON.parse(data);
+    // const list = JSON.parse(data).d.entrylist;
+    const list = data.d.entrylist;
+    const result = [];
+    for (let i = 0, len = list.length; i < len; i++) {
+      const item = list[i];
+      const title = item.title;
+      const viewCount = item.viewsCount;
+      const createDate = item.updatedAt;
+
+      const user = item.user;
+      const author = user.username;
+      const userCommunity = JSON.stringify(user.community);
+      const type = item.type;
+
+      let url = '';
+      if (type === 'article') {
+        url = `/entry/${item.objectId}/detail`;
+      }
+      if (type === 'post') {
+        url = `/post/${item.objectId}`;
+      }
+      result.push({
+        title,
+        author,
+        url,
+        viewCount,
+        createDate,
+        userCommunity
+      });
+    }
+    console.log(result);
+  })
+};
+
+const dataFromJuejin = () => {
+  // 最新 链接
+  // https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=2017-09-19T07%3A48%3A15.354Z&limit=20&tag=5597a05ae4b08a686ce56f6f
+
+  // 最热链接
+  // https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=0.027320297817573&limit=20&tag=5597a05ae4b08a686ce56f6f
+
+  // const url = "https://juejin.im/welcome/frontend";
+  // let random = Math.floor(Math.random() * 100000000000000).toString();
+  let random = null;
+  for (let i = 0; i < 2; i++) {
+    random = Math.floor(Math.random() * 100000000000000).toString();
+    random = `0.${random}`;
+    const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=${random}&limit=2&category=5562b415e4b00c57d9b94ac8`;
+    fetcnDataFromRequest(url);
+  }
+  // superAgent
+  //   .get(url)
+  //   .end((err, result) => {
+  //     if (err) {
+  //       return console.log(err);
+  //     }
+  //     console.log(result.text);
+  //     const data = result.text;
+  //     // console.log(data.entrylist);
+  //   })
+};
+dataFromJuejin();
 // cnblogs
 const dataFromCnblogs = () => {
   const url = "https://www.cnblogs.com/?CategoryId=808&CategoryType=%22SiteHome%22&ItemListActionName=%22PostList%22&PageIndex=1&ParentCategoryId=0";
@@ -136,8 +219,15 @@ const dataFromCnblogs = () => {
     })
 };
 
+const dataFromGithub = () => {
+  // 所有语言
+  // https://github.com/trending' // 默认今天 ?since=weekly  daily monthly
 
-dataFromSegmentfault();
+  const url = 'https://github.com/trending/css?since=weekly'; //daily  monthly
+
+};
+
+// dataFromSegmentfault();
 // dataFromCnblogs();
 
 
