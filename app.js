@@ -110,23 +110,6 @@ const dataFromSegmentfault = () => {
         })
       }
       console.log(data);
-      // const $blog = $('#blog');
-      // const $articles = $blog.find('.stream-list__item');
-      // console.log($articles);
-      // console.log($articles.length);
-      // for(let i = 0; i < $articles.length; i++) {
-      //   // const temp = {};
-      //   const $index = $articles.eq(i);
-      //   const title = $index.find('.title a').text();
-      //   const url = $index.find('h2.title a').attr('href');
-      //   const author = $index.find('ul.author img').attr('alt');
-      //   const desc = $index.find('.excerpt').text();
-      //   console.log(url);
-      //   console.log(author);
-      //   console.log(desc);
-      //   data.push({title,url,author,desc});
-      // }
-      // console.log(data);
     })
 };
 
@@ -200,7 +183,7 @@ const dataFromJuejin = () => {
   //     // console.log(data.entrylist);
   //   })
 };
-dataFromJuejin();
+// dataFromJuejin();
 // cnblogs
 const dataFromCnblogs = () => {
   const url = "https://www.cnblogs.com/?CategoryId=808&CategoryType=%22SiteHome%22&ItemListActionName=%22PostList%22&PageIndex=1&ParentCategoryId=0";
@@ -220,12 +203,37 @@ const dataFromCnblogs = () => {
 };
 
 const dataFromGithub = () => {
-  // 所有语言
+  // 所有语言 热门
   // https://github.com/trending' // 默认今天 ?since=weekly  daily monthly
 
-  const url = 'https://github.com/trending/css?since=weekly'; //daily  monthly
+  const url = 'https://github.com/trending/javascript?since=weekly'; //daily  monthly
+  superAgent
+    .get(url)
+    .end((err, documents) => {
+      if (err) {
+        return console.log(err);
+      }
+      const $ = cheerio.load(documents.text);
+      const $repo = $('.repo-list');
+      const $repoList = $repo.find('li');
+      console.log($repoList.length);
+      const result = [];
 
+      for(let i = 0; i < $repoList.length; i++) {
+        const $item = $repoList.eq(i);
+        const title = ($item.find('.d-inline-block h3 a').text()).replace(/\n*/g,'');
+        const url = $item.find('.d-inline-block h3 a').attr('href');
+        const desc = ($item.find('.py-1 p').text()).replace(/\n*/g,'');;
+        const type = $item.find('.text-gray .d-inline-block span').text();
+        const stars = ($item.find('.text-gray a.muted-link').eq(0).text()).replace(/\n*\s*/g,'');
+        const forks = ($item.find('.text-gray a.muted-link').eq(1).text()).replace(/\n*\s*/g,'');
+        result.push({title,url,desc,stars, forks});
+      }
+      console.log(result);
+  })
 };
+
+dataFromGithub();
 
 // dataFromSegmentfault();
 // dataFromCnblogs();
