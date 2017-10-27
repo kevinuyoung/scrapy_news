@@ -5,6 +5,9 @@ import cheerio from 'cheerio';
 import request from 'request';
 import segmentfaultModel from '../model/segmentfault.js';
 
+let count = 0;
+let repeatCount = 0;
+
 /**
  * segmentfault的时间设置问题：
  * 小于1天，用 小时
@@ -68,7 +71,7 @@ const dataFromSegmentfault = (url, type) => {
  * url = "https://segmentfault.com/news/frontend?page=1";         // 最热头条
  * url = "https://segmentfault.com/news/frontend/newest?page=1"; // 最新头条
  */
-const setTotalNum = 100;
+const setTotalNum = 204;
 const forEachHotestUrl = () => {
   for (let i = 1; i <= setTotalNum; i++) {
     const url = `https://segmentfault.com/news/frontend?page=${i}`;
@@ -92,6 +95,13 @@ const filterData = (documents, type) => {
   // http://www.cnblogs.com/zichi/p/5135636.html 中文乱码？不，是 HTML 实体编码！解决exec正则匹配导致的问题
   const $ = cheerio.load(documents.text, {decodeEntities: false});
   const $news = $('.news__list');
+  if ($news.length === 0) {
+    // console.log('segmentfault fetch data finished');
+    console.log('fetch data from segmentfault：');
+    console.log(`总共抓取文件：${count}`);
+    console.log(`重复文件：${repeatCount}`);
+    process.exit(1);
+  }
   const $newsList = $news.find('.news__item');
   for (let i = 0, len = $newsList.length; i < len; i++) {
     const $item = $newsList.eq(i);
@@ -129,11 +139,13 @@ const filterData = (documents, type) => {
 };
 
 async function saveToCollections (params) {
-  const { url } = params;
+  const { url, title } = params;
   let segmentfault = await segmentfaultModel.findOne({url});
   if (segmentfault) {
+    repeatCount++;
     return console.log(`${title} exists....`);
   }
+  count++;
   return new segmentfaultModel(params).save((err, res) => {
     if (err) {
       throw new Error(`save ${title} error...`);

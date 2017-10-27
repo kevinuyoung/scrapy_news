@@ -30,6 +30,11 @@ app.use(session({
 
 // segmentfault();
 juejin();
+setInterval(() => {
+  console.log('==================开始下一轮==================================');
+  juejin();
+  // segmentfault();
+}, 1 * 60 * 1000)
 
 const server = app.listen(7000, function () {
   const port = server.address().port;
