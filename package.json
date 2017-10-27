@@ -45,7 +45,7 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
     "express-session": "^1.15.5",
-    "mongoose": "^4.11.10",
+    "mongoose": "^4.12.4",
     "request": "^2.83.0",
     "standard": "^10.0.3",
     "superagent": "^3.6.3",
