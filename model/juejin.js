@@ -20,6 +20,9 @@ const juejinSchema = new Schema({
   status: String,
   community: String,
   summaryInfo: String,
+  categoryId: String,
+  category: Schema.Types.Mixed,
+  tags: Array,
   createDate: { type: Date, default: Date.now() }
 });
 

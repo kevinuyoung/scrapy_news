@@ -16,6 +16,7 @@ const segmentfaultSchema = new Schema({
   url: String,
   counts: Number,
   type: String,
+  category: String,
   createDate: { type: Date, default: Date.now() }
 });
 
