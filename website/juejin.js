@@ -26,8 +26,8 @@ const filterData = (data, status) => {
     // process.exit(1);
     clearTimer();
 
-    forEachHotestUrl();
-    forEachNewestUrl();
+    // forEachHotestUrl();
+    // forEachNewestUrl();
     // console.log('*********juejin again***********');
     throw new Error('*********juejin again***********');
     // throw new Error('*********again***********');

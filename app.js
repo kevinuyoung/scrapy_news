@@ -28,8 +28,8 @@ app.use(session({
   }
 }));
 
-segmentfault();
-// juejin();
+// segmentfault();
+juejin();
 
 // setInterval(() => {
 //   console.log('==================junjin 开始下一轮==================================');
