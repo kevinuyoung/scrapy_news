@@ -35,12 +35,12 @@ setInterval(() => {
   console.log('==================junjin 开始下一轮==================================');
   juejin();
   // segmentfault();
-}, 3 * 60 * 1000)
+}, 30 * 60 * 1000)
 
 setInterval(() => {
   console.log('==================segmentfault 开始下一轮==================================');
   segmentfault();
-}, 5 * 60 * 1000)
+}, 1 * 60 * 60 * 1000)
 
 const server = app.listen(7000, function () {
   const port = server.address().port;
