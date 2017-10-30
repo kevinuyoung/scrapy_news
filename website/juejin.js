@@ -1,4 +1,5 @@
 import request from 'request';
+import rp from 'request-promise';
 import juejinModel from '../model/juejin.js';
 import fs from 'fs';
 console.log('.............engering..............');
@@ -6,34 +7,24 @@ let count = 0;
 let repeatCount = 0;
 let hotTimer = null;
 let newTimer = null;
-let restartTimer = null;
 let categoryId = null;
 let categoryTitle = null;
-let randomDelay = 2000;
 
-const clearTimer = () => {
-  if (hotTimer) {
-    clearTimeout(hotTimer);
-  }
-  if (newTimer) {
-    clearTimeout(newTimer);
-  }
-  if (restartTimer) {
-    clearTimeout(restartTimer);
-  }
-  hotTimer = null;
-  newTimer = null;
-  restartTimer = null;
-};
+let startHotPageNum = 1;
+let startNewPageNum = 1;
+let setTotalNum = Math.floor(Math.random() * 50 + 1);
+
 
 const initVariable = () => {
   count = 0;
   repeatCount = 0;
-  // randomDelay = Math.floor(Math.random() * 2000 + 1000);
-  clearTimer();
+  startHotPageNum = 1;
+  startNewPageNum = 1;
+  setTotalNum = Math.floor(Math.random() * 50 + 1);
+  randomCategory();
 };
 
-const filterData = (data, status, url) => {
+const filterData = (data, status) => {
   // console.log(data);
   if (!data || (data && data.m !== 'ok')) {
     console.log('fetch data from juejin：');
@@ -95,16 +86,18 @@ const filterData = (data, status, url) => {
 };
 
 const fetcnDataFromRequest = (url, status) => {
-  clearTimer();
-  request({
-    method: 'GET',
-    url: url,
-    json: 'Content-type: application/json'
-  }, (error, res, data) => {
-    // console.log('========================');
-    // console.log(url);
-    // console.log(data);
-    filterData(data, status, url);
+  console.log('entering.......request....');
+  return new Promise((resolve, reject) => {
+    request({
+      method: 'GET',
+      url: url,
+      json: 'Content-type: application/json'
+    }, (error, res, data) => {
+      if (error) {
+        return reject(error)
+      }
+      resolve(data);
+    })
   })
 };
 
@@ -154,69 +147,82 @@ const randomCategory = () => {
 };
 
 const forEachHotestUrl = () => {
-  // 总页：随机1 - 1000
-  const setTotalNum = Math.floor(Math.random() * 1000 + 1);
-  let random = null;
-  let firstRandom = 0;
-  for (let i = 0; i < setTotalNum; i++) {
-    random = Math.floor(Math.random() * 100000000000000).toString();
-    firstRandom = Math.floor(Math.random() * 10).toString();
-    random = `${firstRandom}.${random}`;
-    // 每页数据：随机10 - 50
-    const limit = Math.floor(Math.random() * 50 + 10);
-    const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=${random}&limit=${limit}&category=${categoryId}`;
-
-    hotTimer = setTimeout(()=> {
-      fetcnDataFromRequest(url, 'hot');
-    }, randomDelay)
+  const randomDelay = Math.floor(Math.random() * 2000 + 500);
+  if (hotTimer) {
+    clearTimeout(hotTimer);
+    hotTimer = null;
   }
-};
+  if (startHotPageNum <= setTotalNum) {
+    console.log(`again..${startHotPageNum}..hot..Total..${setTotalNum}`)
+    hotTimer = setTimeout( ()=> {
+      console.log('entering...setTimeout....')
+      let random = Math.floor(Math.random() * 100000000000000).toString();
+      let firstRandom = Math.floor(Math.random() * 10).toString();
+      random = `${firstRandom}.${random}`;
+      // 每页数据：随机10 - 50
+      const limit = Math.floor(Math.random() * 50 + 10);
+      const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=${random}&limit=${limit}&category=${categoryId}`;
+      fetcnDataFromRequest(url).then((data) => {
+        // console.log(data);
+        filterData(data, 'hot');
+        forEachHotestUrl();
+        startHotPageNum++;
+      }).catch(err =>{
+        console.log(err);
+      })
+    }, randomDelay);
+  }
+ };
 
 const forEachNewestUrl = () => {
-  // const setTotalNum = 2 * 365;
-  // 总页：随机1 - 1000
-  const setTotalNum = Math.floor(Math.random() * 1000 + 1);
-  let currentDate = new Date();
-  const oneDay = 1 * 24 * 60 * 60 * 1000;
-  for (let i = 0; i < setTotalNum; i++) {
+  if (newTimer) {
+    clearTimeout(newTimer);
+    newTimer = null;
+  }
+  const randomDelay = Math.floor(Math.random() * 2000 + 500);
+  if (startHotPageNum <= setTotalNum) {
+    let currentDate = new Date();
+    const oneDay = 1 * 24 * 60 * 60 * 1000;
     currentDate = currentDate - oneDay;
     const before = new Date(currentDate);
-    // 每页数据：随机10 - 50
-    const limit = Math.floor(Math.random() * 50 + 10);
-    const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=${encodeURIComponent(before.toISOString())}&limit=${limit}&category=${categoryId}`;
-    // console.log(url);
-    newTimer = setTimeout(()=> {
-      fetcnDataFromRequest(url, 'new');
-    }, randomDelay)
+    console.log(`${categoryTitle}..${startNewPageNum}..new...Total....${setTotalNum}`)
+    newTimer = setTimeout( ()=> {
+      // 每页数据：随机10 - 50
+      const limit = Math.floor(Math.random() * 50 + 10);
+      const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=${encodeURIComponent(before.toISOString())}&limit=${limit}&category=${categoryId}`;
+      fetcnDataFromRequest(url).then((data) => {
+        // console.log(data);
+        filterData(data, 'new');
+        forEachNewestUrl();
+        startNewPageNum++;
+      }).catch(err =>{
+        console.log(err);
+      })
+    }, randomDelay);
   }
 };
 
 const dataFromJuejin = () => {
-  console.log(`------------random delay ${randomDelay}s-------------`);
+  // console.log(`------------random delay ${randomDelay}s-------------`);
   initVariable();
-  randomCategory();
   forEachHotestUrl();
   forEachNewestUrl();
 };
-
-// setInterval(() => {
-//   dataFromJuejin();
-// }, 5 * 60 * 1000);
 
 async function saveToCollections (params) {
   const { objectId, title, author } = params;
   let juejin = await juejinModel.findOne({objectId});
   if (juejin) {
-    return repeatCount++;
     // return console.log(`${categoryTitle}---juejin: ${title} exists....`);
+    return repeatCount++;
   }
-  count++;
-  console.log(`juejin----: ${author} ： ${title} saves...`);
   return new juejinModel(params).save((err, res) => {
     if (err) {
       console.log(params)
       throw new Error(`save ${title} error...`);
     }
+    count++;
+    console.log(`juejin----: ${author} ： ${title} saves...`);
   })
 }
 

@@ -30,3 +30,18 @@ mongodump  -d mockdata /Users/kai/practice
 
 ## 导入数据库
 mongorestore -d mockdata /Users/kai/practice/mockdata
+
+
+```js
+这种延迟是错误的，这个导致的后果就是，假设有1000个请求，隔了两秒后，所有的请求依旧 全部发送出去了。
+而理想的结果是，没发送一个请求隔2s.
+
+for (let i = 1; i <= setTotalNum; i++) {
+    const url = `https://segmentfault.com/news/${category}?page=${i}`;
+    // const data = await dataFromSegmentfault(url, 'hot');
+    setTimeout(()=> {
+      sendRequestToSegmentfault(url, 'hot');
+    }, 2000)
+  }
+
+```

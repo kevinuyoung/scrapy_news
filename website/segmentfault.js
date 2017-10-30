@@ -8,33 +8,32 @@ import segmentfaultModel from '../model/segmentfault.js';
 let count = 0;
 let repeatCount = 0;
 
-let totalNewsList = 0;
+let startHotPageNum = 1;
+let startNewPageNum = 1;
 
 let hotTimer = null;
 let newTimer = null;
-let restartTimer = null;
+
+let setTotalNum = null;
+let category = null;
+
+const randomCategory = () => {
+  const random = Math.floor(Math.random() * 7);
+  const { title, pageNum } = categoryObj[random];
+  category =  title;
+  setTotalNum = pageNum;
+};
 
 const initVariable = () => {
   count = 0;
   repeatCount = 0;
-  totalNewsList = 0;
+  startHotPageNum = 1;
+  startNewPageNum = 1;
   hotTimer = null;
   newTimer = null;
-  restartTimer = null;
+  randomCategory();
 };
 
-const clearTimer = () => {
-  if (hotTimer) {
-    clearTimeout(hotTimer);
-  }
-  if (newTimer) {
-    clearTimeout(newTimer);
-  }
-  if (restartTimer) {
-    clearTimeout(restartTimer)
-  }
-};
-// clearTimer();
 /**
  * segmentfault的时间设置问题：
  * 小于1天，用 小时
@@ -84,8 +83,8 @@ const updateDate = (date) => {
 };
 
 const dataFromSegmentfault = (url, type, category) => {
-  clearTimer();
-  superAgent
+  return new Promise((resolve, reject)=> {
+    superAgent
     .get(url)
     .end((err, documents) => {
       if (err) {
@@ -93,14 +92,14 @@ const dataFromSegmentfault = (url, type, category) => {
         // fs.appendFileSync('error.log', JSON.stringify(err) + '\n');
         console.log(url);
         // 这里如果不做处理，程序错误的时候，直接打印日志，不会再次执行下一轮代码拉取。
-        // 采取做法，强制开始新的一轮
-        // return forEachUrl();
-        return console.log('*******error*******');
-
-        // return console.log(err);
+        console.log('*******error*******');
+        return reject('error');
       }
-      filterData(documents, type, category, url);
+      resolve(documents);
+      // filterData(documents, type, category, url);
     })
+  })
+  
 };
 
 /**
@@ -112,7 +111,7 @@ const dataFromSegmentfault = (url, type, category) => {
 const categoryObj = [{
   name: '前端',
   title: 'frontend',
-  pageNum: 1
+  pageNum: 205
 },
 {
   name: '后端',
@@ -145,65 +144,74 @@ const categoryObj = [{
   pageNum: 28
 }];
 
-let setTotalNum = null;
-let category = null;
-
-const randomCategory = () => {
-  const random = Math.floor(Math.random() * 7);
-  const { title, pageNum } = categoryObj[random];
-  category =  'tools';
-  setTotalNum = 28;
-  initVariable(category, setTotalNum);
-};
-
 const forEachHotestUrl = () => {
-  for (let i = 1; i <= setTotalNum; i++) {
-    const url = `https://segmentfault.com/news/${category}?page=${i}`;
-    // console.log(url);
-    hotTimer = setTimeout(() => {
-      dataFromSegmentfault(url, 'hot', category);
-    }, 2000);
+  if (hotTimer) {
+    clearTimeout(hotTimer);
+    hotTimer = null;
+  }
+  if (startHotPageNum <= setTotalNum) {
+    console.log(`------total ${category} --num ${setTotalNum}-----------`);
+    const randomDelay = Math.floor(Math.random() * 2000 + 1000);
+    hotTimer = setTimeout( () => {
+      const url = `https://segmentfault.com/news/${category}?page=${startHotPageNum}`;
+      dataFromSegmentfault(url).then((documents)=> {
+        filterData(documents, 'hot', category, url);
+        forEachHotestUrl();
+        startHotPageNum++;
+      }).catch(err=> {
+        console.log('*******error*******');
+      });
+      // const documents = await dataFromSegmentfault(url, 'hot');
+      // const url = `https://segmentfault.com/news/${category}/newest?page=${startNewPageNum}`;
+      // filterData(documents, 'hot', category, url);
+      // forEachHotestUrl();
+      // startHotPageNum++;
+    }, randomDelay)
   }
 };
 
 const forEachNewestUrl = () => {
-  for (let i = 1; i <= (setTotalNum + 1); i++) {
-    const url = `https://segmentfault.com/news/${category}/newest?page=${i}`;
-    newTimer = setTimeout(() => {
-      dataFromSegmentfault(url, 'new', category);
-    }, 2000);
+  if (newTimer) {
+    clearTimeout(newTimer);
+    newTimer = null;
+  }
+  if (startNewPageNum <= setTotalNum) {
+    const randomDelay = Math.floor(Math.random() * 2000 + 1000);
+    hotTimer = setTimeout( () => {
+      const url = `https://segmentfault.com/news/${category}/newest?page=${startNewPageNum}`;
+      dataFromSegmentfault(url).then((documents)=> {
+        filterData(documents, 'new', category, url);
+        forEachNewestUrl();
+        startNewPageNum++;
+      }).catch(err=> {
+        console.log('*******error*******');
+      });
+      // const documents = await dataFromSegmentfault(url);
+      // filterData(documents, 'new', category, url);
+      // forEachNewestUrl();
+      // startNewPageNum++;
+    }, randomDelay);
   }
 };
 
 const forEachUrl = () => {
-  randomCategory();
+  initVariable();
   forEachHotestUrl();
   forEachNewestUrl();
 };
 
-// setInterval(() => {
-//   forEachUrl();
-// }, 10 * 60 * 1000);
-
-const filterData = (documents, type, category, url) => {
+const filterData = async (documents, type, category, url) => {
   // http://www.cnblogs.com/zichi/p/5135636.html 中文乱码？不，是 HTML 实体编码！解决exec正则匹配导致的问题
   const $ = cheerio.load(documents.text, {decodeEntities: false});
   const $news = $('.news__list');
-  // console.log('==========${news}========', $news.length);
   if ($news.length === 0) {
-    // console.log(url);
-    clearTimer();
-    // console.log('segmentfault fetch data finished');
     console.log('fetch data from segmentfault：');
     console.log(`总共抓取文件：${count}`);
     console.log(`重复文件：${repeatCount}`);
     console.log(new Error('*********segmentfault again***********'));
-    // forEachUrl();
-    // process.exit(1);
     // throw new Error('*********segmentfault again***********');
   } else {
     const $newsList = $news.find('.news__item');
-    totalNewsList += totalNewsList + $newsList.length;
     for (let i = 0, len = $newsList.length; i < len; i++) {
       const $item = $newsList.eq(i);
       const $title = $item.find('.news__item-title a');
@@ -235,32 +243,16 @@ const filterData = (documents, type, category, url) => {
         category,
         type
       };
-      // console.log(title);
-      saveToCollections(params);
+      await saveToCollections(params);
     }
   }
-};
-
-/**
- * [description] 判断拉取这一类型 数据是否完毕，
- * 例如： 拉取 frontend这一类型数据， 总页数为205页，每页为 30 条数据，执行两次for循环， 
- * 也就是最多数据为 205 * 30 * 2， 但是并不保证最后一页数据一定为 30条数据，也有可能小于 30
- * 因此，每一次循环都会 根据拉取的 新数据 + 重复数据 是否 和总数相等，如果相等，则进行下一轮
- * @return {[type]} [description]
- */
-const checkIsFetchFinished = () => {
-  if (count + repeatCount === totalNewsList) {
-    console.log('************不好意思，开启下一轮**********************');
-  }
-  forEachUrl();
 };
 
 async function saveToCollections (params) {
   const { url, title } = params;
   let segmentfault = await segmentfaultModel.findOne({url});
   if (segmentfault) {
-    repeatCount++;
-    return checkIsFetchFinished();
+    return repeatCount++;
     // return console.log(`${category}---segmentfault: ${title} exists....`);
   }
   new segmentfaultModel(params).save((err, res) => {
@@ -269,7 +261,6 @@ async function saveToCollections (params) {
     }
     count++;
     console.log(`${category}---segmentfault: ${title} saves....`);
-    return checkIsFetchFinished();
   })
 }
 
