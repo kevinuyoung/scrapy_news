@@ -9,3 +9,6 @@ db.segmentfaults.update({query}, {$set: { category: "frontend" }}, {multi: ##1})
 ### 导出数据库之后，将数据库压缩为zip包，随后放置在另外一台机器导入数据
 - 将zip解压后发现，有json和bson后缀文件，只需倒入到各个表就可以。
  mongorestore -d scrapynews /Users/simon/doc/scrapynews/juejins.bson
+ 
+mongorestore -d scrapynews /root/scrapy_news/data/juejins.bson
+mongorestore -d scrapynews /root/scrapy_news/data/segmentfaults.bson

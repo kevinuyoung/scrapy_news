@@ -181,20 +181,25 @@ const forEachUrl = () => {
   forEachNewestUrl();
 };
 
+// setInterval(() => {
+//   forEachUrl();
+// }, 10 * 60 * 1000);
+
 const filterData = (documents, type, category, url) => {
   // http://www.cnblogs.com/zichi/p/5135636.html 中文乱码？不，是 HTML 实体编码！解决exec正则匹配导致的问题
   const $ = cheerio.load(documents.text, {decodeEntities: false});
   const $news = $('.news__list');
-  console.log('==========${news}========', $news.length);
+  // console.log('==========${news}========', $news.length);
   if ($news.length === 0) {
-    console.log(url);
+    // console.log(url);
     clearTimer();
     // console.log('segmentfault fetch data finished');
     console.log('fetch data from segmentfault：');
     console.log(`总共抓取文件：${count}`);
     console.log(`重复文件：${repeatCount}`);
+    console.log(new Error('*********segmentfault again***********'));
     // forEachUrl();
-    process.exit(1);
+    // process.exit(1);
     // throw new Error('*********segmentfault again***********');
   } else {
     const $newsList = $news.find('.news__item');

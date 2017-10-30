@@ -9,7 +9,7 @@ let newTimer = null;
 let restartTimer = null;
 let categoryId = null;
 let categoryTitle = null;
-let randomDelay = null;
+let randomDelay = 2000;
 
 const clearTimer = () => {
   if (hotTimer) {
@@ -29,7 +29,7 @@ const clearTimer = () => {
 const initVariable = () => {
   count = 0;
   repeatCount = 0;
-  randomDelay = Math.floor(Math.random() * 10000 + 1000);
+  // randomDelay = Math.floor(Math.random() * 2000 + 1000);
   clearTimer();
 };
 
@@ -42,14 +42,14 @@ const filterData = (data, status, url) => {
     // process.exit(1);
     // clearTimer();
     console.log('***********下次就要5分钟更新一次了****************');
-    restartTimer = setTimeout(() => {
-      const errorlog = `${new Date()}---${url}--开始更新了\n`;
-      fs.appendFileSync('error.log', errorlog);
-      dataFromJuejin();
-    }, 5 * 60 * 1000);
+    // restartTimer = setTimeout(() => {
+    //   const errorlog = `${new Date()}---${url}--开始更新了\n`;
+    //   // fs.appendFileSync('error.log', errorlog);
+    //   dataFromJuejin();
+    // }, 5 * 60 * 1000);
     // forEachHotestUrl();
     // forEachNewestUrl();
-    // console.log('*********juejin again***********');
+    console.log(new Error('*********juejin again***********'));
     // throw new Error('*********juejin again***********');
     // throw new Error('*********again***********');
   } else {
@@ -192,11 +192,16 @@ const forEachNewestUrl = () => {
 };
 
 const dataFromJuejin = () => {
+  console.log(`------------random delay ${randomDelay}s-------------`);
   initVariable();
   randomCategory();
   forEachHotestUrl();
   forEachNewestUrl();
 };
+
+// setInterval(() => {
+//   dataFromJuejin();
+// }, 5 * 60 * 1000);
 
 async function saveToCollections (params) {
   const { objectId, title, author } = params;
