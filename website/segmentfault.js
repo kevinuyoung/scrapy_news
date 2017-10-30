@@ -7,8 +7,19 @@ import segmentfaultModel from '../model/segmentfault.js';
 
 let count = 0;
 let repeatCount = 0;
+
+let totalNewsList = 0;
+
 let hotTimer = null;
 let newTimer = null;
+
+const initVariable = () => {
+  count = 0;
+  repeatCount = 0;
+  totalNewsList = 0;
+  hotTimer = null;
+  newTimer = null;
+};
 
 const clearTimer = () => {
   if (hotTimer) {
@@ -18,7 +29,7 @@ const clearTimer = () => {
     clearTimeout(newTimer);
   }
 };
-clearTimer();
+// clearTimer();
 /**
  * segmentfault的时间设置问题：
  * 小于1天，用 小时
@@ -73,9 +84,17 @@ const dataFromSegmentfault = (url, type, category) => {
     .get(url)
     .end((err, documents) => {
       if (err) {
-        return console.log(err);
+        err.url = url;
+        // fs.appendFileSync('error.log', JSON.stringify(err) + '\n');
+        console.log(url);
+        // 这里如果不做处理，程序错误的时候，直接打印日志，不会再次执行下一轮代码拉取。
+        // 采取做法，强制开始新的一轮
+        // return forEachUrl();
+        return console.log('*******error*******');
+
+        // return console.log(err);
       }
-      filterData(documents, type, category);
+      filterData(documents, type, category, url);
     })
 };
 
@@ -88,7 +107,7 @@ const dataFromSegmentfault = (url, type, category) => {
 const categoryObj = [{
   name: '前端',
   title: 'frontend',
-  pageNum: 205
+  pageNum: 1
 },
 {
   name: '后端',
@@ -127,43 +146,43 @@ let category = null;
 const randomCategory = () => {
   const random = Math.floor(Math.random() * 7);
   const { title, pageNum } = categoryObj[random];
-  category =  title;
-  setTotalNum = pageNum;
+  category =  'tools';
+  setTotalNum = 28;
+  initVariable(category, setTotalNum);
 };
 
-randomCategory()
-
 const forEachHotestUrl = () => {
-  // const category = 'frontend';
   for (let i = 1; i <= setTotalNum; i++) {
     const url = `https://segmentfault.com/news/${category}?page=${i}`;
-    console.log(url);
+    // console.log(url);
     hotTimer = setTimeout(() => {
       dataFromSegmentfault(url, 'hot', category);
-    }, 1000);
+    }, 2000);
   }
 };
 
 const forEachNewestUrl = () => {
-  // const category = 'frontend';
   for (let i = 1; i <= (setTotalNum + 1); i++) {
     const url = `https://segmentfault.com/news/${category}/newest?page=${i}`;
     newTimer = setTimeout(() => {
       dataFromSegmentfault(url, 'new', category);
-    }, 1000);
+    }, 2000);
   }
 };
 
 const forEachUrl = () => {
+  randomCategory();
   forEachHotestUrl();
   forEachNewestUrl();
 };
 
-const filterData = (documents, type, category) => {
+const filterData = (documents, type, category, url) => {
   // http://www.cnblogs.com/zichi/p/5135636.html 中文乱码？不，是 HTML 实体编码！解决exec正则匹配导致的问题
   const $ = cheerio.load(documents.text, {decodeEntities: false});
   const $news = $('.news__list');
+  console.log('==========${news}========', $news.length);
   if ($news.length === 0) {
+    console.log(url);
     clearTimer();
     // console.log('segmentfault fetch data finished');
     console.log('fetch data from segmentfault：');
@@ -174,6 +193,7 @@ const filterData = (documents, type, category) => {
     // throw new Error('*********segmentfault again***********');
   } else {
     const $newsList = $news.find('.news__item');
+    totalNewsList += totalNewsList + $newsList.length;
     for (let i = 0, len = $newsList.length; i < len; i++) {
       const $item = $newsList.eq(i);
       const $title = $item.find('.news__item-title a');
@@ -211,18 +231,34 @@ const filterData = (documents, type, category) => {
   }
 };
 
+/**
+ * [description] 判断拉取这一类型 数据是否完毕，
+ * 例如： 拉取 frontend这一类型数据， 总页数为205页，每页为 30 条数据，执行两次for循环， 
+ * 也就是最多数据为 205 * 30 * 2， 但是并不保证最后一页数据一定为 30条数据，也有可能小于 30
+ * 因此，每一次循环都会 根据拉取的 新数据 + 重复数据 是否 和总数相等，如果相等，则进行下一轮
+ * @return {[type]} [description]
+ */
+const checkIsFetchFinished = () => {
+  if (count + repeatCount === totalNewsList) {
+    console.log('************不好意思，开启下一轮**********************');
+  }
+  forEachUrl();
+};
+
 async function saveToCollections (params) {
   const { url, title } = params;
   let segmentfault = await segmentfaultModel.findOne({url});
   if (segmentfault) {
     repeatCount++;
-    return console.log(`${category}---segmentfault: ${title} exists....`);
+    return checkIsFetchFinished();
+    // return console.log(`${category}---segmentfault: ${title} exists....`);
   }
-  count++;
-  return new segmentfaultModel(params).save((err, res) => {
+  new segmentfaultModel(params).save((err, res) => {
     if (err) {
       throw new Error(`save ${title} error...`);
     }
+    count++;
+    return checkIsFetchFinished();
   })
 }
 
