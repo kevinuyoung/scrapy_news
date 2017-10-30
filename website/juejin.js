@@ -184,7 +184,7 @@ const forEachNewestUrl = () => {
     // 每页数据：随机10 - 50
     const limit = Math.floor(Math.random() * 50 + 10);
     const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=${encodeURIComponent(before.toISOString())}&limit=${limit}&category=${categoryId}`;
-    console.log(url);
+    // console.log(url);
     newTimer = setTimeout(()=> {
       fetcnDataFromRequest(url, 'new');
     }, randomDelay)
@@ -207,11 +207,11 @@ async function saveToCollections (params) {
   const { objectId, title, author } = params;
   let juejin = await juejinModel.findOne({objectId});
   if (juejin) {
-    repeatCount++;
-    return console.log(`${categoryTitle}---juejin: ${title} exists....`);
+    return repeatCount++;
+    // return console.log(`${categoryTitle}---juejin: ${title} exists....`);
   }
   count++;
-  console.log(`${author} ： ${title}`);
+  console.log(`juejin----: ${author} ： ${title} saves...`);
   return new juejinModel(params).save((err, res) => {
     if (err) {
       console.log(params)

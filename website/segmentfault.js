@@ -268,6 +268,7 @@ async function saveToCollections (params) {
       throw new Error(`save ${title} error...`);
     }
     count++;
+    console.log(`${category}---segmentfault: ${title} saves....`);
     return checkIsFetchFinished();
   })
 }
