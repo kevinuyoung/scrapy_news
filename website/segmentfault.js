@@ -12,6 +12,7 @@ let totalNewsList = 0;
 
 let hotTimer = null;
 let newTimer = null;
+let restartTimer = null;
 
 const initVariable = () => {
   count = 0;
@@ -19,6 +20,7 @@ const initVariable = () => {
   totalNewsList = 0;
   hotTimer = null;
   newTimer = null;
+  restartTimer = null;
 };
 
 const clearTimer = () => {
@@ -27,6 +29,9 @@ const clearTimer = () => {
   }
   if (newTimer) {
     clearTimeout(newTimer);
+  }
+  if (restartTimer) {
+    clearTimeout(restartTimer)
   }
 };
 // clearTimer();

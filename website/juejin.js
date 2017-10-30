@@ -1,12 +1,15 @@
 import request from 'request';
 import juejinModel from '../model/juejin.js';
+import fs from 'fs';
 console.log('.............engering..............');
 let count = 0;
 let repeatCount = 0;
 let hotTimer = null;
 let newTimer = null;
+let restartTimer = null;
 let categoryId = null;
 let categoryTitle = null;
+let randomDelay = null;
 
 const clearTimer = () => {
   if (hotTimer) {
@@ -15,21 +18,39 @@ const clearTimer = () => {
   if (newTimer) {
     clearTimeout(newTimer);
   }
+  if (restartTimer) {
+    clearTimeout(restartTimer);
+  }
+  hotTimer = null;
+  newTimer = null;
+  restartTimer = null;
 };
 
-const filterData = (data, status) => {
+const initVariable = () => {
+  count = 0;
+  repeatCount = 0;
+  randomDelay = Math.floor(Math.random() * 10000 + 1000);
+  clearTimer();
+};
+
+const filterData = (data, status, url) => {
   // console.log(data);
   if (!data || (data && data.m !== 'ok')) {
     console.log('fetch data from juejin：');
     console.log(`总共抓取文件：${count}`);
     console.log(`重复文件：${repeatCount}`);
     // process.exit(1);
-    clearTimer();
-
+    // clearTimer();
+    console.log('***********下次就要5分钟更新一次了****************');
+    restartTimer = setTimeout(() => {
+      const errorlog = `${new Date()}---${url}--开始更新了\n`;
+      fs.appendFileSync('error.log', errorlog);
+      dataFromJuejin();
+    }, 5 * 60 * 1000);
     // forEachHotestUrl();
     // forEachNewestUrl();
     // console.log('*********juejin again***********');
-    throw new Error('*********juejin again***********');
+    // throw new Error('*********juejin again***********');
     // throw new Error('*********again***********');
   } else {
     const list = data.d.entrylist;
@@ -80,10 +101,10 @@ const fetcnDataFromRequest = (url, status) => {
     url: url,
     json: 'Content-type: application/json'
   }, (error, res, data) => {
-    console.log('========================');
-    console.log(url);
-    console.log(data);
-    filterData(data, status);
+    // console.log('========================');
+    // console.log(url);
+    // console.log(data);
+    filterData(data, status, url);
   })
 };
 
@@ -131,7 +152,6 @@ const randomCategory = () => {
   categoryId = id;
   categoryTitle = title;
 };
-randomCategory();
 
 const forEachHotestUrl = () => {
   // 总页：随机1 - 1000
@@ -148,7 +168,7 @@ const forEachHotestUrl = () => {
 
     hotTimer = setTimeout(()=> {
       fetcnDataFromRequest(url, 'hot');
-    }, 2000)
+    }, randomDelay)
   }
 };
 
@@ -167,11 +187,13 @@ const forEachNewestUrl = () => {
     console.log(url);
     newTimer = setTimeout(()=> {
       fetcnDataFromRequest(url, 'new');
-    }, 2000)
+    }, randomDelay)
   }
 };
 
 const dataFromJuejin = () => {
+  initVariable();
+  randomCategory();
   forEachHotestUrl();
   forEachNewestUrl();
 };
