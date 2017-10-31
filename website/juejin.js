@@ -14,6 +14,8 @@ let startHotPageNum = 1;
 let startNewPageNum = 1;
 let setTotalNum = Math.floor(Math.random() * 300 + 1);
 
+let hotFinishedFlag = null;
+let newFinishedFlag = null;
 
 const initVariable = () => {
   count = 0;
@@ -22,6 +24,24 @@ const initVariable = () => {
   startNewPageNum = 1;
   setTotalNum = Math.floor(Math.random() * 300 + 1);
   randomCategory();
+};
+
+const destoryVariable = () => {
+  if (hotFinishedFlag && newFinishedFlag) {
+    console.log('************正在清理变量************');
+    count = null;
+    repeatCount = null;
+    hotTimer = null;
+    newTimer = null;
+    categoryId = null;
+    categoryTitle = null;
+
+    startHotPageNum = null;
+    startNewPageNum = null;
+    setTotalNum = null;
+    hotFinishedFlag = null;
+    newFinishedFlag = null;
+  }
 };
 
 const filterData = (data, status) => {
@@ -159,6 +179,9 @@ const forEachHotestUrl = () => {
         startHotPageNum++;
       })
     }, randomDelay);
+  } else {
+    hotFinishedFlag = true;
+    destoryVariable();
   }
  };
 
@@ -191,6 +214,9 @@ const forEachNewestUrl = () => {
         startNewPageNum++;
       })
     }, randomDelay);
+  } else {
+    newFinishedFlag = true;
+    destoryVariable();
   }
 };
 
