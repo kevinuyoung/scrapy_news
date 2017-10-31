@@ -2,7 +2,7 @@ import request from 'request';
 import rp from 'request-promise';
 import juejinModel from '../model/juejin.js';
 import fs from 'fs';
-console.log('.............engering..............');
+
 let count = 0;
 let repeatCount = 0;
 let hotTimer = null;
@@ -12,7 +12,7 @@ let categoryTitle = null;
 
 let startHotPageNum = 1;
 let startNewPageNum = 1;
-let setTotalNum = Math.floor(Math.random() * 50 + 1);
+let setTotalNum = Math.floor(Math.random() * 300 + 1);
 
 
 const initVariable = () => {
@@ -20,32 +20,18 @@ const initVariable = () => {
   repeatCount = 0;
   startHotPageNum = 1;
   startNewPageNum = 1;
-  setTotalNum = Math.floor(Math.random() * 50 + 1);
+  setTotalNum = Math.floor(Math.random() * 300 + 1);
   randomCategory();
 };
 
 const filterData = (data, status) => {
-  // console.log(data);
   if (!data || (data && data.m !== 'ok')) {
     console.log('fetch data from juejin：');
     console.log(`总共抓取文件：${count}`);
     console.log(`重复文件：${repeatCount}`);
-    // process.exit(1);
-    // clearTimer();
-    console.log('***********下次就要5分钟更新一次了****************');
-    // restartTimer = setTimeout(() => {
-    //   const errorlog = `${new Date()}---${url}--开始更新了\n`;
-    //   // fs.appendFileSync('error.log', errorlog);
-    //   dataFromJuejin();
-    // }, 5 * 60 * 1000);
-    // forEachHotestUrl();
-    // forEachNewestUrl();
     console.log(new Error('*********juejin again***********'));
-    // throw new Error('*********juejin again***********');
-    // throw new Error('*********again***********');
   } else {
     const list = data.d.entrylist;
-  // console.log(list)
     for (let i = 0, len = list.length; i < len; i++) {
       const item = list[i];
       const { title, viewsCount, type, summaryInfo, user, objectId, category, tags} = item;
@@ -86,7 +72,6 @@ const filterData = (data, status) => {
 };
 
 const fetcnDataFromRequest = (url, status) => {
-  console.log('entering.......request....');
   return new Promise((resolve, reject) => {
     request({
       method: 'GET',
@@ -153,22 +138,25 @@ const forEachHotestUrl = () => {
     hotTimer = null;
   }
   if (startHotPageNum <= setTotalNum) {
-    console.log(`again..${startHotPageNum}..hot..Total..${setTotalNum}`)
+    let random = Math.floor(Math.random() * 100000000000000).toString();
+    let firstRandom = Math.floor(Math.random() * 10).toString();
+    random = `${firstRandom}.${random}`;
+    // 每页数据：随机20 - 60
+    const limit = Math.floor(Math.random() * 60 + 20);
+    const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=${random}&limit=${limit}&category=${categoryId}`;
+    console.log(`获取juejin：${categoryTitle},${randomDelay/1000}s 后，进入第${startHotPageNum}页，总页数为：${setTotalNum}页：\n`);
+    console.log(url + '\n');
+
     hotTimer = setTimeout( ()=> {
-      console.log('entering...setTimeout....')
-      let random = Math.floor(Math.random() * 100000000000000).toString();
-      let firstRandom = Math.floor(Math.random() * 10).toString();
-      random = `${firstRandom}.${random}`;
-      // 每页数据：随机10 - 50
-      const limit = Math.floor(Math.random() * 50 + 10);
-      const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_rank?src=web&before=${random}&limit=${limit}&category=${categoryId}`;
       fetcnDataFromRequest(url).then((data) => {
-        // console.log(data);
         filterData(data, 'hot');
         forEachHotestUrl();
         startHotPageNum++;
       }).catch(err =>{
+        fs.appendFileSync('../juejin.error.log', `link:${url}, ${JSON.stringify(err)}\n`);
         console.log(err);
+        forEachHotestUrl();
+        startHotPageNum++;
       })
     }, randomDelay);
   }
@@ -180,37 +168,40 @@ const forEachNewestUrl = () => {
     newTimer = null;
   }
   const randomDelay = Math.floor(Math.random() * 2000 + 500);
-  if (startHotPageNum <= setTotalNum) {
+  if (startNewPageNum <= setTotalNum) {
     let currentDate = new Date();
     const oneDay = 1 * 24 * 60 * 60 * 1000;
     currentDate = currentDate - oneDay;
     const before = new Date(currentDate);
-    console.log(`${categoryTitle}..${startNewPageNum}..new...Total....${setTotalNum}`)
+    // 每页数据：随机20 - 60
+    const limit = Math.floor(Math.random() * 60 + 20);
+    const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=${encodeURIComponent(before.toISOString())}&limit=${limit}&category=${categoryId}`;
+    console.log(`获取juejin：${categoryTitle},${randomDelay/1000}s 后，进入第${startNewPageNum}页，总页数为：${setTotalNum}页：\n`);
+    console.log(url + '\n');
+    
     newTimer = setTimeout( ()=> {
-      // 每页数据：随机10 - 50
-      const limit = Math.floor(Math.random() * 50 + 10);
-      const url = `https://timeline-merger-ms.juejin.im/v1/get_entry_by_timeline?src=web&before=${encodeURIComponent(before.toISOString())}&limit=${limit}&category=${categoryId}`;
       fetcnDataFromRequest(url).then((data) => {
-        // console.log(data);
         filterData(data, 'new');
         forEachNewestUrl();
         startNewPageNum++;
       }).catch(err =>{
+        fs.appendFileSync('../juejin.error.log', `link:${url}, ${JSON.stringify(err)}\n`);
         console.log(err);
+        forEachHotestUrl();
+        startNewPageNum++;
       })
     }, randomDelay);
   }
 };
 
 const dataFromJuejin = () => {
-  // console.log(`------------random delay ${randomDelay}s-------------`);
   initVariable();
   forEachHotestUrl();
   forEachNewestUrl();
 };
 
 async function saveToCollections (params) {
-  const { objectId, title, author } = params;
+  const { objectId, title, author,url } = params;
   let juejin = await juejinModel.findOne({objectId});
   if (juejin) {
     // return console.log(`${categoryTitle}---juejin: ${title} exists....`);
@@ -218,11 +209,11 @@ async function saveToCollections (params) {
   }
   return new juejinModel(params).save((err, res) => {
     if (err) {
-      console.log(params)
-      throw new Error(`save ${title} error...`);
+      fs.appendFileSync('../juejin.error.log', `${url} save error\n`);
+      return console.log(err);
     }
     count++;
-    console.log(`juejin----: ${author} ： ${title} saves...`);
+    console.log(`juejin----: ${author} ： ${title} 保存成功.`);
   })
 }
 

@@ -28,19 +28,48 @@ app.use(session({
   }
 }));
 
+let timerJuejin = null;
+let timerSegmentfault = null;
+
+const loopForJuejin = () => {
+  if (timerJuejin) {
+    clearTimeout(timerJuejin);
+    timerJuejin = null;
+  }
+  timerJuejin = setTimeout(() => {
+    console.log('==================junjin 开始下一轮==================================');
+    juejin();
+    loopForJuejin();
+  }, 20 * 60 * 1000);
+};
+
+const loopForSegmentfault = () => {
+  if (timerSegmentfault) {
+    clearTimeout(timerSegmentfault);
+    timerSegmentfault = null;
+  }
+  timerSegmentfault = setTimeout(() => {
+    console.log('==================segmentfault 开始下一轮==================================');
+    segmentfault();
+    loopForSegmentfault();
+  }, 45 * 60 * 1000);
+};
+
 segmentfault();
 juejin();
 
-setInterval(() => {
-  console.log('==================junjin 开始下一轮==================================');
-  juejin();
-  // segmentfault();
-}, 30 * 60 * 1000)
+loopForJuejin();
+loopForSegmentfault();
 
-setInterval(() => {
-  console.log('==================segmentfault 开始下一轮==================================');
-  segmentfault();
-}, 1 * 60 * 60 * 1000)
+// setInterval(() => {
+//   console.log('==================junjin 开始下一轮==================================');
+//   juejin();
+// }, 15 * 60 * 1000)
+
+// setInterval(() => {
+//   console.log('==================segmentfault 开始下一轮==================================');
+//   segmentfault();
+// }, 45 * 60 * 1000)
 
 const server = app.listen(7000, function () {
   const port = server.address().port;

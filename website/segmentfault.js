@@ -89,14 +89,10 @@ const dataFromSegmentfault = (url, type, category) => {
     .end((err, documents) => {
       if (err) {
         err.url = url;
-        // fs.appendFileSync('error.log', JSON.stringify(err) + '\n');
-        console.log(url);
-        // 这里如果不做处理，程序错误的时候，直接打印日志，不会再次执行下一轮代码拉取。
-        console.log('*******error*******');
+        fs.appendFileSync('../segmentfault.error.log', `send Request error--- ${JSON.stringify(err)} \n`);
         return reject('error');
       }
       resolve(documents);
-      // filterData(documents, type, category, url);
     })
   })
   
@@ -150,22 +146,22 @@ const forEachHotestUrl = () => {
     hotTimer = null;
   }
   if (startHotPageNum <= setTotalNum) {
-    console.log(`------total ${category} --num ${setTotalNum}-----------`);
-    const randomDelay = Math.floor(Math.random() * 2000 + 1000);
+    const randomDelay = Math.floor(Math.random() * 5000 + 1000);
+    const url = `https://segmentfault.com/news/${category}?page=${startHotPageNum}`;
+    console.log(`获取hot-segmentfault：${category},${randomDelay/1000}s 后，进入第${startHotPageNum}页，总页数为：${setTotalNum}页：\n`);
+    console.log(url + '\n');
+
     hotTimer = setTimeout( () => {
-      const url = `https://segmentfault.com/news/${category}?page=${startHotPageNum}`;
       dataFromSegmentfault(url).then((documents)=> {
         filterData(documents, 'hot', category, url);
         forEachHotestUrl();
         startHotPageNum++;
-      }).catch(err=> {
-        console.log('*******error*******');
+      }).catch(err => {
+        fs.appendFileSync('../segmentfault.error.log', `Link：${url} ${JSON.stringify(err)} error\n`);
+        console.log(`*****获取 ==hot== ${category}**error*******`);
+        forEachHotestUrl();
+        startHotPageNum++;
       });
-      // const documents = await dataFromSegmentfault(url, 'hot');
-      // const url = `https://segmentfault.com/news/${category}/newest?page=${startNewPageNum}`;
-      // filterData(documents, 'hot', category, url);
-      // forEachHotestUrl();
-      // startHotPageNum++;
     }, randomDelay)
   }
 };
@@ -176,20 +172,22 @@ const forEachNewestUrl = () => {
     newTimer = null;
   }
   if (startNewPageNum <= setTotalNum) {
-    const randomDelay = Math.floor(Math.random() * 2000 + 1000);
-    hotTimer = setTimeout( () => {
-      const url = `https://segmentfault.com/news/${category}/newest?page=${startNewPageNum}`;
+    const randomDelay = Math.floor(Math.random() * 5000 + 1000);
+    const url = `https://segmentfault.com/news/${category}/newest?page=${startNewPageNum}`;
+    console.log(`获取new-segmentfault：${category},${randomDelay/1000}s 后，进入第${startNewPageNum}页，总页数为：${setTotalNum}页：\n`);
+    console.log(url + '\n');
+
+    newTimer = setTimeout( () => {
       dataFromSegmentfault(url).then((documents)=> {
         filterData(documents, 'new', category, url);
         forEachNewestUrl();
         startNewPageNum++;
-      }).catch(err=> {
-        console.log('*******error*******');
+      }).catch(err => {
+        fs.appendFileSync('../segmentfault.error.log', `Link：${url} ${JSON.stringify(err)} error\n`);
+        console.log(`*****获取 ==new== ${category}**error*******`);
+        forEachNewestUrl();
+        startNewPageNum++;
       });
-      // const documents = await dataFromSegmentfault(url);
-      // filterData(documents, 'new', category, url);
-      // forEachNewestUrl();
-      // startNewPageNum++;
     }, randomDelay);
   }
 };
@@ -209,7 +207,6 @@ const filterData = async (documents, type, category, url) => {
     console.log(`总共抓取文件：${count}`);
     console.log(`重复文件：${repeatCount}`);
     console.log(new Error('*********segmentfault again***********'));
-    // throw new Error('*********segmentfault again***********');
   } else {
     const $newsList = $news.find('.news__item');
     for (let i = 0, len = $newsList.length; i < len; i++) {
@@ -257,10 +254,11 @@ async function saveToCollections (params) {
   }
   new segmentfaultModel(params).save((err, res) => {
     if (err) {
-      throw new Error(`save ${title} error...`);
+      fs.appendFileSync('../segmentfault.error.log', `${url} save error\n`);
+      return console.log(err);
     }
     count++;
-    console.log(`${category}---segmentfault: ${title} saves....`);
+    console.log(`${category}---segmentfault: ${title} 保存成功....`);
   })
 }
 
