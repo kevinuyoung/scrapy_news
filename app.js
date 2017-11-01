@@ -55,6 +55,8 @@ const loopForSegmentfault = () => {
   }, 45 * 60 * 1000);
 };
 
+console.log('start....to....run application******......');
+
 segmentfault();
 juejin();
 
