@@ -126,12 +126,14 @@ const dataFromSegmentfault = (url, type, category) => {
 const categoryObj = [{
   name: '前端',
   title: 'frontend',
-  pageNum: 205
+  pageNum: 20,
+  // pageNum: 205
 },
 {
   name: '后端',
   title: 'backend',
-  pageNum: 164
+  pageNum: 20
+  // pageNum: 164
 },
 {
   name: "IOS",
