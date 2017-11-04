@@ -2,13 +2,14 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /**
- * 用户表
- *   userid: 用户ID
- * username: 用户昵称
- * password: 用户密码
- *     mark: 用户自我介绍
- *    email: 用户邮箱
- *  regDate: 用户注册时间
+ * segmentfault
+ *       title: 标题
+ *      author: 作者
+ *         url: 链接
+ *      counts: 浏览数
+ *        type: 热门或最新
+ *    category: 类型
+ *  createDate: 发表时间
  */
 const segmentfaultSchema = new Schema({
   title: String,

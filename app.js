@@ -63,16 +63,6 @@ juejin();
 loopForJuejin();
 loopForSegmentfault();
 
-// setInterval(() => {
-//   console.log('==================junjin 开始下一轮==================================');
-//   juejin();
-// }, 15 * 60 * 1000)
-
-// setInterval(() => {
-//   console.log('==================segmentfault 开始下一轮==================================');
-//   segmentfault();
-// }, 45 * 60 * 1000)
-
 const server = app.listen(7000, function () {
   const port = server.address().port;
   console.log('Example app listening at http://%s:%s', 'localhost', port);

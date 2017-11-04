@@ -1,5 +1,5 @@
-# -scrapy_news
-Node scrapy 
+# scrapy_news--Node + Express + Mongodb + Es6
+Scrapy news from segmentfault & juejin.
 
 ### how to start
 npm run dev
