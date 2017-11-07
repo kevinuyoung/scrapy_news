@@ -222,7 +222,7 @@ const forEachNewestUrl = () => {
 const forEachUrl = () => {
   initVariable();
   forEachHotestUrl();
-  // forEachNewestUrl();
+  forEachNewestUrl();
 };
 
 const filterData = async (documents, type, category, url) => {

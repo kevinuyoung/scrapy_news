@@ -12,7 +12,7 @@ let categoryTitle = null;
 
 let startHotPageNum = 1;
 let startNewPageNum = 1;
-let setTotalNum = Math.floor(Math.random() * 50 + 1);
+let setTotalNum = Math.floor(Math.random() * 100 + 1);
 
 let hotFinishedFlag = null;
 let newFinishedFlag = null;
@@ -22,7 +22,7 @@ const initVariable = () => {
   repeatCount = 0;
   startHotPageNum = 1;
   startNewPageNum = 1;
-  setTotalNum = Math.floor(Math.random() * 50 + 1);
+  setTotalNum = Math.floor(Math.random() * 100 + 1);
   randomCategory();
 };
 

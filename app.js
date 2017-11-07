@@ -40,7 +40,7 @@ const loopForJuejin = () => {
     console.log('==================junjin 开始下一轮==================================');
     juejin();
     loopForJuejin();
-  }, 12 * 60 * 1000);
+  }, 15 * 60 * 1000);
 };
 
 const loopForSegmentfault = () => {
