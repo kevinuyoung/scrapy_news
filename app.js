@@ -40,7 +40,7 @@ const loopForJuejin = () => {
     console.log('==================junjin 开始下一轮==================================');
     juejin();
     loopForJuejin();
-  }, 20 * 60 * 1000);
+  }, 12 * 60 * 1000);
 };
 
 const loopForSegmentfault = () => {
@@ -52,24 +52,16 @@ const loopForSegmentfault = () => {
     console.log('==================segmentfault 开始下一轮==================================');
     segmentfault();
     loopForSegmentfault();
-  }, 45 * 60 * 1000);
+  }, 30 * 60 * 1000);
 };
+
+console.log('start....to....run application******......');
 
 segmentfault();
 juejin();
 
 loopForJuejin();
 loopForSegmentfault();
-
-// setInterval(() => {
-//   console.log('==================junjin 开始下一轮==================================');
-//   juejin();
-// }, 15 * 60 * 1000)
-
-// setInterval(() => {
-//   console.log('==================segmentfault 开始下一轮==================================');
-//   segmentfault();
-// }, 45 * 60 * 1000)
 
 const server = app.listen(7000, function () {
   const port = server.address().port;

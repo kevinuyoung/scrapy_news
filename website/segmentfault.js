@@ -17,6 +17,9 @@ let newTimer = null;
 let setTotalNum = null;
 let category = null;
 
+let hotFinishedFlag = null;
+let newFinishedFlag = null;
+
 const randomCategory = () => {
   const random = Math.floor(Math.random() * 7);
   const { title, pageNum } = categoryObj[random];
@@ -32,6 +35,22 @@ const initVariable = () => {
   hotTimer = null;
   newTimer = null;
   randomCategory();
+};
+
+const destoryVariable = () => {
+  if (hotFinishedFlag && newFinishedFlag) {
+    count = null;
+    repeatCount = null;
+
+    startHotPageNum = null;
+    startNewPageNum = null;
+
+    hotTimer = null;
+    newTimer = null;
+
+    setTotalNum = null;
+    category = null;
+  }
 };
 
 /**
@@ -55,14 +74,14 @@ const updateDate = (date) => {
     const time = currentDate.getTime();
     const minutes = parseInt(date) * 60 * 1000;
     return new Date(time - minutes);
-    return minutes;
+    // return minutes;
   }
   if (date.indexOf('小时') > 0) {
     // console.log('小时:');
     const time = currentDate.getTime();
     const hours = parseInt(date) * 60 * 60 * 1000;
     return new Date(time - hours);
-    return hours;
+    // return hours;
   }
   if (date.indexOf('天') > 0) {
     // console.log('天:');
@@ -107,12 +126,14 @@ const dataFromSegmentfault = (url, type, category) => {
 const categoryObj = [{
   name: '前端',
   title: 'frontend',
-  pageNum: 205
+  pageNum: 20,
+  // pageNum: 205
 },
 {
   name: '后端',
   title: 'backend',
-  pageNum: 164
+  pageNum: 20
+  // pageNum: 164
 },
 {
   name: "IOS",
@@ -163,6 +184,9 @@ const forEachHotestUrl = () => {
         startHotPageNum++;
       });
     }, randomDelay)
+  } else {
+    hotFinishedFlag = true;
+    destoryVariable();
   }
 };
 
@@ -189,13 +213,16 @@ const forEachNewestUrl = () => {
         startNewPageNum++;
       });
     }, randomDelay);
+  } else {
+    newFinishedFlag = true;
+    destoryVariable();
   }
 };
 
 const forEachUrl = () => {
   initVariable();
   forEachHotestUrl();
-  forEachNewestUrl();
+  // forEachNewestUrl();
 };
 
 const filterData = async (documents, type, category, url) => {
@@ -222,8 +249,14 @@ const filterData = async (documents, type, category, url) => {
 
       const pattern = /(<a)(.*?)(>)(.*?)(<\/a>)(.+)(\s+.*?)/;
       const execRes = pattern.exec(metaHtml);
-      const author = execRes[4];
-      const createDate = updateDate(execRes[6]);
+      let author = null
+      try {
+        author = execRes[4];
+      } catch(err) {   
+        console.log(err);
+        continue;
+      }
+      const createDate = updateDate(execRes[6]) || new Date();
 
       let counts = $item.find('.news__bookmark-text').text();
       if (counts.indexOf('k') > 0) {

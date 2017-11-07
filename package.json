@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "dev": "supervisor --harmony index.js",
-    "deploy": "pm2 start index.js",
+    "deploy": "pm2 start index.js --watch",
+    "stop": "pm2 stop index.js --watch 0",
     "lint": "standard"
   },
   "repository": {
